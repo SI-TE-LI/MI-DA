@@ -572,6 +572,43 @@
         background-color: #fff;
         box-shadow: 0 0 0 3px rgba(128, 0, 0, 0.1);
     }
+
+    /* ============================================================
+       密码可见性切换
+       ============================================================ */
+    .password-wrapper {
+        position: relative;
+        width: 100%;
+    }
+    .password-wrapper .auth-input {
+        width: 100%;
+        padding-right: 40px; /* 为眼睛图标留出空间 */
+    }
+    .toggle-password-btn {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        color: #888;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.2s;
+    }
+    .toggle-password-btn:hover {
+        color: #800000;
+    }
+    .eye-icon {
+        width: 18px;
+        height: 18px;
+    }
+    .eye-icon.hidden {
+        display: none;
+    }
 </style>
 </head>
 <body>
@@ -756,7 +793,21 @@
                 </div>
                 <div class="setting-row">
                     <label for="authPassword">密码</label>
-                    <input type="password" id="authPassword" class="auth-input" placeholder="至少6位密码">
+                    <div class="password-wrapper">
+                        <input type="password" id="authPassword" class="auth-input" placeholder="至少6位密码">
+                        <button type="button" class="toggle-password-btn" id="togglePasswordBtn" tabindex="-1" title="切换密码可见性">
+                            <!-- 眼睛睁开（密码可见） -->
+                            <svg class="eye-icon eye-open hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM8 5.5a2.5 2.5 0 0 1 0 5 2.5 2.5 0 0 1 0-5z"/>
+                            </svg>
+                            <!-- 眼睛闭合（密码隐藏） -->
+                            <svg class="eye-icon eye-closed" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M13.359 11.238C15.06 9.72 16 8 16 8s-3-5.5-8-5.5a7.028 7.028 0 0 0-2.79.588l.77.771A5.944 5.944 0 0 1 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.134 13.134 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755-.165.165-.337.328-.517.486l.708.709z"/>
+                                <path d="M11.297 9.176a3.5 3.5 0 0 0-4.474-4.474l.823.823a2.5 2.5 0 0 1 2.829 2.829l.822.822zm-2.943 1.299.822.822a3.5 3.5 0 0 1-4.474-4.474l.823.823a2.5 2.5 0 0 0 2.829 2.829z"/>
+                                <path d="M3.35 5.47c-.18.16-.353.322-.518.487A13.134 13.134 0 0 0 1.172 8l.195.288c.335.48.83 1.12 1.465 1.755C4.121 11.332 5.881 12.5 8 12.5c.716 0 1.39-.133 2.02-.36l.77.772A7.029 7.029 0 0 1 8 13.5C3 13.5 0 8 0 8s.939-1.721 2.641-3.238l.708.709zm10.296 8.884-12-12 .708-.708 12 12-.708.708z"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
                 <div id="authMessage" style="font-size:13px; margin-top:8px; min-height:20px;"></div>
             </div>
@@ -769,7 +820,7 @@
 
     <script>
         // ============================================================
-        // Supabase 初始化（请替换为你的实际值）
+        // Supabase 初始化（已填入你的实际值）
         // ============================================================
         const SUPABASE_URL = 'https://qyjonvwhrgtyprgcolde.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_U5IaPG6alHG8-OCLapik1Q_vdf5jCTF';
@@ -1280,8 +1331,30 @@
         const authSwitch   = document.getElementById('authSwitch');
         const signupBtn    = document.getElementById('signupBtn');
         const loginBtn     = document.getElementById('loginBtn');
+        const togglePasswordBtn = document.getElementById('togglePasswordBtn');
 
         let isLoginMode = true;
+
+        // 设置密码可见性
+        function setPasswordVisibility(visible) {
+            const eyeOpen = document.querySelector('.eye-open');
+            const eyeClosed = document.querySelector('.eye-closed');
+            if (visible) {
+                authPassword.type = 'text';
+                eyeOpen.classList.remove('hidden');
+                eyeClosed.classList.add('hidden');
+            } else {
+                authPassword.type = 'password';
+                eyeOpen.classList.add('hidden');
+                eyeClosed.classList.remove('hidden');
+            }
+        }
+
+        // 切换密码可见性
+        togglePasswordBtn.addEventListener('click', () => {
+            // 如果当前是密码模式，则变为可见，反之亦然
+            setPasswordVisibility(authPassword.type === 'password');
+        });
 
         function openAuthModal(loginMode) {
             isLoginMode = loginMode;
@@ -1291,6 +1364,14 @@
             authMessage.textContent = '';
             authEmail.value = '';
             authPassword.value = '';
+            
+            // 根据模式设置密码默认可见性
+            if (loginMode) {
+                setPasswordVisibility(false); // 登录时默认隐藏
+            } else {
+                setPasswordVisibility(true);  // 注册时默认可见
+            }
+            
             authModal.classList.add('show');
         }
 
