@@ -334,81 +334,36 @@
     .article-content::-webkit-scrollbar { width: 8px; }
     .article-content::-webkit-scrollbar-thumb { background-color: #ccc; border-radius: 4px; }
 
-    /* ============================================================
-       ⭐ 中文段落首行缩进 + 排版优化
-       ============================================================ */
     #articleContent p {
-        text-indent: 2em;              /* ⭐ 首行缩进两个中文字符宽度 */
+        text-indent: 2em;
         margin-bottom: 0.6em;
         word-wrap: break-word;
         word-break: break-word;
     }
-
-    /* 标题、列表、引用等不缩进 */
-    #articleContent h1,
-    #articleContent h2,
-    #articleContent h3,
-    #articleContent h4,
-    #articleContent h5,
-    #articleContent h6,
-    #articleContent li,
-    #articleContent blockquote,
-    #articleContent hr {
+    #articleContent h1, #articleContent h2, #articleContent h3,
+    #articleContent h4, #articleContent h5, #articleContent h6,
+    #articleContent li, #articleContent blockquote, #articleContent hr {
         text-indent: 0;
     }
-
-    /* 标题统一加一点下间距，更舒展 */
     #articleContent h1 {
-        margin: 0.2em 0 0.8em;
-        padding-bottom: 0.3em;
-        border-bottom: 2px solid #800000;
-        color: #222;
+        margin: 0.2em 0 0.8em; padding-bottom: 0.3em;
+        border-bottom: 2px solid #800000; color: #222;
     }
-    #articleContent h2 {
-        margin: 1.2em 0 0.6em;
-        color: #800000;
-    }
-    #articleContent h3 {
-        margin: 1em 0 0.5em;
-        color: #333;
-    }
-    #articleContent h4 {
-        margin: 0.8em 0 0.4em;
-        color: #555;
-    }
-
-    /* 引用块 */
+    #articleContent h2 { margin: 1.2em 0 0.6em; color: #800000; }
+    #articleContent h3 { margin: 1em 0 0.5em; color: #333; }
+    #articleContent h4 { margin: 0.8em 0 0.4em; color: #555; }
     #articleContent blockquote {
-        margin: 0.8em 0;
-        padding: 0.5em 1em;
-        border-left: 3px solid #c47a7a;
-        background-color: #faf5f5;
-        color: #666;
-        font-style: italic;
+        margin: 0.8em 0; padding: 0.5em 1em;
+        border-left: 3px solid #c47a7a; background-color: #faf5f5;
+        color: #666; font-style: italic;
     }
-    #articleContent blockquote p {
-        text-indent: 0;
-        margin-bottom: 0.3em;
-    }
-
-    /* 分割线 */
-    #articleContent hr {
-        margin: 1.5em 0;
-        border: none;
-        border-top: 1px solid #e0e0e0;
-    }
-
-    /* 列表 */
-    #articleContent ul,
-    #articleContent ol {
-        margin: 0.6em 0 0.6em 2em;
-    }
-    #articleContent li {
-        margin-bottom: 0.3em;
-    }
+    #articleContent blockquote p { text-indent: 0; margin-bottom: 0.3em; }
+    #articleContent hr { margin: 1.5em 0; border: none; border-top: 1px solid #e0e0e0; }
+    #articleContent ul, #articleContent ol { margin: 0.6em 0 0.6em 2em; }
+    #articleContent li { margin-bottom: 0.3em; }
 
     /* ============================================================
-       设置模态框
+       设置/认证/账户 模态框
        ============================================================ */
     .settings-modal {
         position: fixed; inset: 0;
@@ -447,6 +402,7 @@
         display: flex; justify-content: space-between; align-items: center;
         padding: 20px 24px;
         border-bottom: 1px solid #eee;
+        flex-shrink: 0;
     }
     .settings-header h2 {
         font-size: 18px; color: #222;
@@ -539,6 +495,7 @@
         padding: 16px 24px;
         border-top: 1px solid #eee;
         display: flex; justify-content: space-between; gap: 10px;
+        flex-shrink: 0;
     }
     .settings-btn {
         padding: 9px 22px; border-radius: 8px;
@@ -552,8 +509,10 @@
         background-color: #800000; border-color: #800000; color: #ffffff;
     }
     .settings-btn.primary:hover { background-color: #a00000; }
+    .settings-btn.primary:disabled {
+        opacity: 0.55; cursor: not-allowed;
+    }
 
-    /* 认证模态框输入框样式 */
     .auth-input {
         width: 100%;
         padding: 9px 12px;
@@ -568,9 +527,85 @@
         box-sizing: border-box;
     }
     .auth-input:focus {
-        border-color: #800000;
-        background-color: #fff;
+        border-color: #800000; background-color: #fff;
         box-shadow: 0 0 0 3px rgba(128, 0, 0, 0.1);
+    }
+    .auth-input:disabled,
+    .auth-input[readonly] {
+        background-color: #f0f0f0;
+        color: #888;
+        cursor: not-allowed;
+    }
+
+    /* 密码可见性切换 */
+    .password-wrapper {
+        position: relative;
+        width: 100%;
+    }
+    .password-wrapper .auth-input {
+        width: 100%;
+        padding-right: 42px;
+    }
+    .toggle-password-btn {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 28px;
+        height: 28px;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        color: #888;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: color 0.2s, background 0.2s;
+    }
+    .toggle-password-btn:hover {
+        color: #800000;
+        background-color: rgba(128, 0, 0, 0.08);
+    }
+    .toggle-password-btn svg {
+        width: 18px;
+        height: 18px;
+        display: block;
+    }
+
+    /* 账户模态框 */
+    .account-message {
+        font-size: 13px;
+        color: #2a7a2a;
+        margin-top: 8px;
+        min-height: 18px;
+    }
+    .account-message.error { color: #c00; }
+
+    .auth-forgot {
+        display: none;
+        margin-top: 8px;
+        font-size: 13px;
+    }
+    .auth-forgot a {
+        color: #800000;
+        text-decoration: underline;
+        cursor: pointer;
+    }
+    .auth-forgot a:hover { color: #cc0000; }
+
+    .account-hint {
+        font-size: 12px;
+        color: #888;
+        margin-top: 4px;
+    }
+
+    .account-not-login {
+        text-align: center;
+        padding: 24px 0;
+        color: #888;
+        font-size: 14px;
     }
 </style>
 </head>
@@ -604,6 +639,7 @@
                 </div>
             </div>
             <nav class="main-nav">
+                <a href="#" id="accountBtn">账户</a>
                 <a href="#" id="settingsBtn">设置</a>
             </nav>
         </header>
@@ -684,7 +720,7 @@
         </main>
     </div>
 
-    <!-- 设置模态框 -->
+    <!-- 设置模态框（仅阅读设置） -->
     <div class="settings-modal" id="settingsModal">
         <div class="settings-overlay" id="settingsOverlay"></div>
         <div class="settings-panel">
@@ -741,6 +777,59 @@
         </div>
     </div>
 
+    <!-- 账户模态框 -->
+    <div class="settings-modal" id="accountModal">
+        <div class="settings-overlay" id="accountOverlay"></div>
+        <div class="settings-panel" style="max-width: 460px;">
+            <div class="settings-header">
+                <h2><span class="accent"></span>账户</h2>
+                <button class="settings-close" id="accountClose" title="关闭 (Esc)">✕</button>
+            </div>
+            <div class="settings-body">
+                <div id="accountNotLogin" class="account-not-login">
+                    请先登录后查看账户信息
+                </div>
+                <div id="accountFields" style="display:none;">
+                    <div class="setting-row">
+                        <label for="accountUsername">用户名</label>
+                        <input type="text" id="accountUsername" class="auth-input" maxlength="20" placeholder="不超过20个字">
+                        <div class="account-hint">不超过 20 字</div>
+                    </div>
+                    <div class="setting-row">
+                        <label for="accountEmail">邮箱</label>
+                        <input type="email" id="accountEmail" class="auth-input" disabled>
+                    </div>
+                    <div class="setting-row">
+                        <label for="accountCreatedAt">创建时间</label>
+                        <input type="text" id="accountCreatedAt" class="auth-input" disabled>
+                    </div>
+                    <div class="setting-row">
+                        <label for="accountGender">性别</label>
+                        <select id="accountGender" class="auth-input">
+                            <option value="">未设置</option>
+                            <option value="male">男</option>
+                            <option value="female">女</option>
+                            <option value="other">其他</option>
+                            <option value="private">不愿透露</option>
+                        </select>
+                    </div>
+                    <div class="setting-row">
+                        <label for="accountBirth">出生年月</label>
+                        <input type="month" id="accountBirth" class="auth-input">
+                    </div>
+                    <div class="setting-row">
+                        <label>找回密码</label>
+                        <button type="button" class="settings-btn" id="accountResetPassword" style="width:100%;">发送密码重置邮件到邮箱</button>
+                    </div>
+                    <div class="account-message" id="accountMessage"></div>
+                </div>
+            </div>
+            <div class="settings-footer">
+                <button class="settings-btn primary" id="accountDone">完成</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 认证模态框（登录/注册） -->
     <div class="settings-modal" id="authModal">
         <div class="settings-overlay" id="authOverlay"></div>
@@ -750,15 +839,35 @@
                 <button class="settings-close" id="authClose" title="关闭 (Esc)">✕</button>
             </div>
             <div class="settings-body">
+                <div class="setting-row" id="authUsernameRow" style="display:none;">
+                    <label for="authUsername">用户名</label>
+                    <input type="text" id="authUsername" class="auth-input" maxlength="20" placeholder="不超过20个字">
+                    <div class="account-hint">不超过 20 字，注册后可在账户设置中修改</div>
+                </div>
                 <div class="setting-row">
                     <label for="authEmail">邮箱</label>
                     <input type="email" id="authEmail" class="auth-input" placeholder="your@email.com">
                 </div>
                 <div class="setting-row">
                     <label for="authPassword">密码</label>
-                    <input type="password" id="authPassword" class="auth-input" placeholder="至少6位密码">
+                    <div class="password-wrapper">
+                        <input type="password" id="authPassword" class="auth-input" placeholder="至少6位密码">
+                        <button type="button" class="toggle-password-btn" id="togglePasswordBtn" tabindex="-1" title="切换密码可见性">
+                            <svg id="eyeOpenIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" style="display:none;">
+                                <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM8 5.5a2.5 2.5 0 0 1 0 5 2.5 2.5 0 0 1 0-5z"/>
+                            </svg>
+                            <svg id="eyeClosedIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M13.359 11.238C15.06 9.72 16 8 16 8s-3-5.5-8-5.5a7.028 7.028 0 0 0-2.79.588l.77.771A5.944 5.944 0 0 1 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.134 13.134 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755-.165.165-.337.328-.517.486l.708.709z"/>
+                                <path d="M11.297 9.176a3.5 3.5 0 0 0-4.474-4.474l.823.823a2.5 2.5 0 0 1 2.829 2.829l.822.822zm-2.943 1.299.822.822a3.5 3.5 0 0 1-4.474-4.474l.823.823a2.5 2.5 0 0 0 2.829 2.829z"/>
+                                <path d="M3.35 5.47c-.18.16-.353.322-.518.487A13.134 13.134 0 0 0 1.172 8l.195.288c.335.48.83 1.12 1.465 1.755C4.121 11.332 5.881 12.5 8 12.5c.716 0 1.39-.133 2.02-.36l.77.772A7.029 7.029 0 0 1 8 13.5C3 13.5 0 8 0 8s.939-1.721 2.641-3.238l.708.709zm10.296 8.884-12-12 .708-.708 12 12-.708.708z"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
                 <div id="authMessage" style="font-size:13px; margin-top:8px; min-height:20px;"></div>
+                <div class="auth-forgot" id="authForgot">
+                    <a href="#" id="authForgotLink">忘记密码？点击发送重置邮件</a>
+                </div>
             </div>
             <div class="settings-footer">
                 <button class="settings-btn" id="authSwitch">还没有账号？注册</button>
@@ -769,7 +878,7 @@
 
     <script>
         // ============================================================
-        // Supabase 初始化（请替换为你的实际值）
+        // Supabase 初始化
         // ============================================================
         const SUPABASE_URL = 'https://qyjonvwhrgtyprgcolde.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_U5IaPG6alHG8-OCLapik1Q_vdf5jCTF';
@@ -819,14 +928,11 @@
         // ============================================================
         function loadArticle(key) {
             const jsPath = key + '.js';
-
             if (window.SCP_ARTICLES[key]) {
                 renderArticle(window.SCP_ARTICLES[key]);
                 return;
             }
-
             articleContent.innerHTML = '<p style="color:#999;">正在加载...</p>';
-
             const script = document.createElement('script');
             script.src = jsPath;
             script.onload = function() {
@@ -853,7 +959,7 @@
         }
 
         // ============================================================
-        // 设置
+        // 阅读设置
         // ============================================================
         const DEFAULT_SETTINGS = {
             fontFamily: '"Microsoft YaHei", "微软雅黑", Arial, sans-serif',
@@ -864,7 +970,6 @@
         };
 
         let userSettings = { ...DEFAULT_SETTINGS };
-
         try {
             const saved = localStorage.getItem('scp-user-settings');
             if (saved) userSettings = { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
@@ -878,14 +983,12 @@
 
         function applySettings() {
             const s = userSettings;
-
             let styleEl = document.getElementById('scp-user-settings-style');
             if (!styleEl) {
                 styleEl = document.createElement('style');
                 styleEl.id = 'scp-user-settings-style';
                 document.head.appendChild(styleEl);
             }
-
             styleEl.textContent = `
                 #articleContent {
                     font-family: ${s.fontFamily} !important;
@@ -894,27 +997,13 @@
                     color: ${s.textColor} !important;
                     background-color: ${s.bgColor} !important;
                 }
-                #articleContent * {
-                    font-family: ${s.fontFamily} !important;
-                }
-                #articleContent h1 {
-                    font-size: ${Math.round(s.fontSize * 1.6)}px !important;
-                }
-                #articleContent h2 {
-                    font-size: ${Math.round(s.fontSize * 1.35)}px !important;
-                }
-                #articleContent h3 {
-                    font-size: ${Math.round(s.fontSize * 1.15)}px !important;
-                }
-                #articleContent p,
-                #articleContent li,
-                #articleContent td,
-                #articleContent th,
-                #articleContent div,
-                #articleContent span,
-                #articleContent a {
-                    font-size: ${s.fontSize}px;
-                }
+                #articleContent * { font-family: ${s.fontFamily} !important; }
+                #articleContent h1 { font-size: ${Math.round(s.fontSize * 1.6)}px !important; }
+                #articleContent h2 { font-size: ${Math.round(s.fontSize * 1.35)}px !important; }
+                #articleContent h3 { font-size: ${Math.round(s.fontSize * 1.15)}px !important; }
+                #articleContent p, #articleContent li, #articleContent td,
+                #articleContent th, #articleContent div, #articleContent span,
+                #articleContent a { font-size: ${s.fontSize}px; }
             `;
         }
 
@@ -1000,7 +1089,6 @@
 
             const key = childElement.getAttribute('data-src');
             if (key) loadArticle(key);
-
             setSelection(childElement);
 
             let delay = wasClosed ? 250 : 60;
@@ -1017,7 +1105,6 @@
             groupElement.classList.add('open');
             const parentTitle = groupElement.querySelector('.toc-parent');
             if (parentTitle) setSelection(parentTitle);
-
             let delay = wasClosed ? 250 : 60;
             if (sidebar.classList.contains('collapsed')) {
                 sidebar.classList.remove('collapsed');
@@ -1267,6 +1354,132 @@
         });
 
         // ============================================================
+        // 账户模态框
+        // ============================================================
+        const accountBtn       = document.getElementById('accountBtn');
+        const accountModal     = document.getElementById('accountModal');
+        const accountOverlay   = document.getElementById('accountOverlay');
+        const accountClose     = document.getElementById('accountClose');
+        const accountDone      = document.getElementById('accountDone');
+        const accountNotLogin  = document.getElementById('accountNotLogin');
+        const accountFields    = document.getElementById('accountFields');
+        const accountUsername  = document.getElementById('accountUsername');
+        const accountEmail     = document.getElementById('accountEmail');
+        const accountCreatedAt = document.getElementById('accountCreatedAt');
+        const accountGender    = document.getElementById('accountGender');
+        const accountBirth     = document.getElementById('accountBirth');
+        const accountResetPassword = document.getElementById('accountResetPassword');
+        const accountMessage   = document.getElementById('accountMessage');
+
+        function formatDateTime(iso) {
+            if (!iso) return '';
+            const d = new Date(iso);
+            const pad = n => String(n).padStart(2, '0');
+            return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate())
+                 + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+        }
+
+        async function refreshAccountModal() {
+            accountMessage.textContent = '';
+            accountMessage.classList.remove('error');
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            if (!user) {
+                accountNotLogin.style.display = '';
+                accountFields.style.display = 'none';
+                return;
+            }
+            accountNotLogin.style.display = 'none';
+            accountFields.style.display = '';
+            const meta = user.user_metadata || {};
+            accountUsername.value  = meta.username || '';
+            accountEmail.value     = user.email || '';
+            accountCreatedAt.value = formatDateTime(user.created_at);
+            accountGender.value    = meta.gender || '';
+            accountBirth.value     = meta.birth || '';
+        }
+
+        async function saveAccountInfo() {
+            const username = accountUsername.value.trim();
+            const gender   = accountGender.value;
+            const birth    = accountBirth.value;
+            if (!username) {
+                accountMessage.textContent = '用户名不能为空';
+                accountMessage.classList.add('error');
+                return;
+            }
+            if (username.length > 20) {
+                accountMessage.textContent = '用户名不能超过 20 字';
+                accountMessage.classList.add('error');
+                return;
+            }
+            const { error } = await supabaseClient.auth.updateUser({
+                data: { username, gender, birth }
+            });
+            if (error) {
+                accountMessage.textContent = '保存失败：' + error.message;
+                accountMessage.classList.add('error');
+            } else {
+                accountMessage.textContent = '已保存';
+                accountMessage.classList.remove('error');
+                setTimeout(() => { accountMessage.textContent = ''; }, 2000);
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (user) updateAuthUI(user);
+            }
+        }
+
+        accountUsername.addEventListener('change', saveAccountInfo);
+        accountGender.addEventListener('change', saveAccountInfo);
+        accountBirth.addEventListener('change', saveAccountInfo);
+
+        accountResetPassword.addEventListener('click', async function() {
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            if (!user || !user.email) {
+                accountMessage.textContent = '未登录或邮箱缺失';
+                accountMessage.classList.add('error');
+                return;
+            }
+            accountResetPassword.disabled = true;
+            accountMessage.textContent = '发送中...';
+            accountMessage.classList.remove('error');
+            try {
+                const { error } = await supabaseClient.auth.resetPasswordForEmail(user.email, {
+                    redirectTo: window.location.origin
+                });
+                if (error) throw error;
+                accountMessage.textContent = '密码重置邮件已发送至 ' + user.email;
+                accountMessage.classList.remove('error');
+            } catch (err) {
+                accountMessage.textContent = '发送失败：' + (err.message || '未知错误');
+                accountMessage.classList.add('error');
+            } finally {
+                accountResetPassword.disabled = false;
+            }
+        });
+
+        function openAccountModal() {
+            refreshAccountModal();
+            accountModal.classList.add('show');
+            exitSearch();
+        }
+        function closeAccountModal() {
+            accountModal.classList.remove('show');
+        }
+
+        accountBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            openAccountModal();
+        });
+        accountClose.addEventListener('click', closeAccountModal);
+        accountOverlay.addEventListener('click', closeAccountModal);
+        accountDone.addEventListener('click', closeAccountModal);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && accountModal.classList.contains('show')) {
+                closeAccountModal();
+            }
+        });
+
+        // ============================================================
         // 用户认证（Supabase）
         // ============================================================
         const authModal    = document.getElementById('authModal');
@@ -1280,8 +1493,36 @@
         const authSwitch   = document.getElementById('authSwitch');
         const signupBtn    = document.getElementById('signupBtn');
         const loginBtn     = document.getElementById('loginBtn');
+        const togglePasswordBtn = document.getElementById('togglePasswordBtn');
+        const eyeOpenIcon   = document.getElementById('eyeOpenIcon');
+        const eyeClosedIcon = document.getElementById('eyeClosedIcon');
+        const authUsernameRow = document.getElementById('authUsernameRow');
+        const authUsername    = document.getElementById('authUsername');
+        const authForgot      = document.getElementById('authForgot');
+        const authForgotLink  = document.getElementById('authForgotLink');
 
         let isLoginMode = true;
+        let loginFailCount = 0;
+        const MAX_LOGIN_FAILS = 3;
+
+        function setPasswordVisibility(visible) {
+            if (visible) {
+                authPassword.setAttribute('type', 'text');
+                eyeOpenIcon.style.display = 'block';
+                eyeClosedIcon.style.display = 'none';
+            } else {
+                authPassword.setAttribute('type', 'password');
+                eyeOpenIcon.style.display = 'none';
+                eyeClosedIcon.style.display = 'block';
+            }
+        }
+
+        togglePasswordBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const isCurrentlyPassword = authPassword.getAttribute('type') === 'password';
+            setPasswordVisibility(isCurrentlyPassword);
+        });
 
         function openAuthModal(loginMode) {
             isLoginMode = loginMode;
@@ -1291,6 +1532,18 @@
             authMessage.textContent = '';
             authEmail.value = '';
             authPassword.value = '';
+            authUsername.value = '';
+            authUsernameRow.style.display = loginMode ? 'none' : '';
+
+            if (loginMode && loginFailCount >= MAX_LOGIN_FAILS) {
+                authForgot.style.display = 'block';
+            } else {
+                authForgot.style.display = 'none';
+            }
+
+            if (loginMode) setPasswordVisibility(false);
+            else setPasswordVisibility(true);
+
             authModal.classList.add('show');
         }
 
@@ -1315,6 +1568,29 @@
             openAuthModal(!isLoginMode);
         });
 
+        authForgotLink.addEventListener('click', async function(e) {
+            e.preventDefault();
+            const email = authEmail.value.trim();
+            if (!email) {
+                authMessage.textContent = '请先填写邮箱';
+                authMessage.style.color = '#c00';
+                return;
+            }
+            authMessage.textContent = '发送中...';
+            authMessage.style.color = '#666';
+            try {
+                const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+                    redirectTo: window.location.origin
+                });
+                if (error) throw error;
+                authMessage.textContent = '密码重置邮件已发送，请查收邮箱';
+                authMessage.style.color = '#2a7a2a';
+            } catch (err) {
+                authMessage.textContent = err.message || '发送失败';
+                authMessage.style.color = '#c00';
+            }
+        });
+
         authSubmit.addEventListener('click', async function() {
             const email = authEmail.value.trim();
             const password = authPassword.value;
@@ -1330,6 +1606,21 @@
                 return;
             }
 
+            let username = '';
+            if (!isLoginMode) {
+                username = authUsername.value.trim();
+                if (!username) {
+                    authMessage.textContent = '请填写用户名';
+                    authMessage.style.color = '#c00';
+                    return;
+                }
+                if (username.length > 20) {
+                    authMessage.textContent = '用户名不能超过 20 字';
+                    authMessage.style.color = '#c00';
+                    return;
+                }
+            }
+
             authSubmit.disabled = true;
             authMessage.textContent = '处理中...';
             authMessage.style.color = '#666';
@@ -1337,18 +1628,19 @@
             try {
                 if (isLoginMode) {
                     const { data, error } = await supabaseClient.auth.signInWithPassword({
-                        email: email,
-                        password: password
+                        email, password
                     });
                     if (error) throw error;
+                    loginFailCount = 0;
+                    authForgot.style.display = 'none';
                     authMessage.textContent = '登录成功！';
                     authMessage.style.color = '#2a7a2a';
                     setTimeout(closeAuthModal, 800);
                     updateAuthUI(data.user);
                 } else {
                     const { data, error } = await supabaseClient.auth.signUp({
-                        email: email,
-                        password: password
+                        email, password,
+                        options: { data: { username } }
                     });
                     if (error) throw error;
                     if (data.user && data.session) {
@@ -1362,7 +1654,21 @@
                     }
                 }
             } catch (err) {
-                authMessage.textContent = err.message || '操作失败，请重试';
+                if (isLoginMode) {
+                    loginFailCount++;
+                    if (loginFailCount >= MAX_LOGIN_FAILS) {
+                        authForgot.style.display = 'block';
+                    }
+                    const remain = MAX_LOGIN_FAILS - loginFailCount;
+                    const baseMsg = err.message || '登录失败';
+                    if (remain > 0) {
+                        authMessage.textContent = baseMsg + '（还可尝试 ' + remain + ' 次）';
+                    } else {
+                        authMessage.textContent = baseMsg + '（连续失败 ' + loginFailCount + ' 次，请尝试找回密码）';
+                    }
+                } else {
+                    authMessage.textContent = err.message || '操作失败，请重试';
+                }
                 authMessage.style.color = '#c00';
             } finally {
                 authSubmit.disabled = false;
@@ -1371,7 +1677,9 @@
 
         function updateAuthUI(user) {
             if (user) {
-                signupBtn.textContent = user.email || '已登录';
+                const meta = user.user_metadata || {};
+                const displayName = meta.username || user.email || '已登录';
+                signupBtn.textContent = displayName;
                 signupBtn.style.pointerEvents = 'none';
                 loginBtn.textContent = '退出';
                 loginBtn.style.pointerEvents = 'auto';
@@ -1395,20 +1703,17 @@
             }
         }
 
-        // 检查是否已有登录会话
         (async function() {
             const { data: { session } } = await supabaseClient.auth.getSession();
-            if (session && session.user) {
-                updateAuthUI(session.user);
-            }
+            if (session && session.user) updateAuthUI(session.user);
         })();
 
-        // 监听认证状态变化
         supabaseClient.auth.onAuthStateChange((event, session) => {
             if (session && session.user) {
                 updateAuthUI(session.user);
             } else {
                 updateAuthUI(null);
+                if (accountModal.classList.contains('show')) refreshAccountModal();
             }
         });
 
