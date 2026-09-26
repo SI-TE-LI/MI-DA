@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>SCP基金会</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: "Microsoft YaHei", Arial, sans-serif;
+        background-color: #f4f4f4;
+        /* ⭐ 固定视口高度 + 不允许页面整体滚动 */
+        height: 100vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* ============================================================
+       ⭐ 通用圆形按钮
+       ============================================================ */
+    .circle-btn {
+        width: 32px;
+        height: 32px;
+        background-color: rgba(128, 0, 0, 0.72);
+        color: #ffffff;
+        border: 1.5px solid rgba(255, 255, 255, 0.5);
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+        transition: background 0.2s ease, transform 0.2s ease;
+    }
+    .circle-btn:hover {
+        background-color: rgba(204, 0, 0, 0.95);
+        transform: scale(1.08);
+    }
+    .circle-btn:active {
+        transform: scale(0.95);
+    }
+
+    .arrow-icon {
+        display: block;
+        transition: transform 0.3s ease;
+    }
+
+    /* ============================================================
+       顶部页头包裹器
+       ============================================================ */
+    .header-wrapper {
+        position: relative;
+        max-width: 1200px;
+        width: calc(100% - 40px);
+        margin: 20px auto 0;
+        flex-shrink: 0;
+        transition: margin-top 0.3s ease;
+    }
+    .header-wrapper.collapsed {
+        margin-top: 0;
+    }
+
+    .site-header {
+        background: linear-gradient(to bottom, #1a0000 0%, #4a0000 60%, #2a0000 100%);
+        color: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        max-height: 400px;
+        overflow: visible;
+        transition: max-height 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease;
+    }
+    .header-wrapper.collapsed .site-header {
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        box-shadow: none;
+    }
+
+    /* ---- 顶栏 ---- */
+    .top-bar {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        padding: 8px 80px 8px 24px;
+        font-size: 12px;
+        background-color: rgba(0, 0, 0, 0.35);
+        border-radius: 16px 16px 0 0;
+        min-height: 40px;
+    }
+    .top-bar a { color: #cccccc; text-decoration: none; margin-left: 5px; }
+    .top-bar a:hover { color: #ffffff; text-decoration: underline; }
+
+    /* ---- 主视觉区 ---- */
+    .header-main {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 30px 40px;
+    }
+    .logo-area { display: flex; align-items: center; gap: 20px; }
+    .logo-placeholder {
+        width: 80px; height: 80px; background-color: #fff;
+        border-radius: 50%; border: 3px solid #000;
+    }
+    .title-group { display: flex; flex-direction: column; }
+    .title-group h1 { font-size: 32px; letter-spacing: 2px; margin-bottom: 5px; }
+    .title-group .slogan { font-size: 14px; color: #cccccc; letter-spacing: 1px; }
+
+    /* ---- 底部导航条 ---- */
+    .main-nav {
+        background-color: rgba(20, 20, 20, 0.55);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        display: flex; justify-content: flex-end;
+        padding: 0 40px;
+        border-radius: 0 0 16px 16px;
+    }
+    .main-nav a {
+        color: #e0e0e0; text-decoration: none; padding: 12px 20px;
+        font-size: 14px; display: block;
+        transition: background 0.2s, color 0.2s;
+    }
+    .main-nav a:hover { background-color: rgba(128, 0, 0, 0.85); color: #ffffff; }
+
+    /* ============================================================
+       ⭐ 顶部收起/展开按钮
+       ============================================================ */
+    .header-toggle-btn {
+        position: absolute;
+        top: -16px;
+        right: -16px;
+        z-index: 101;
+        transition: top 0.3s ease,
+                    right 0.3s ease,
+                    background 0.2s ease,
+                    transform 0.2s ease;
+    }
+    .header-toggle-btn .arrow-icon {
+        transform: rotate(0deg);
+    }
+    .header-wrapper.collapsed .header-toggle-btn .arrow-icon {
+        transform: rotate(180deg);
+    }
+
+    /* ============ 搜索框 ============ */
+    .search-area { position: relative; }
+
+    .search-box {
+        position: relative;
+        display: flex;
+        align-items: center;
+        width: 280px;
+        padding: 0 16px 0 40px;
+        background-color: rgba(0, 0, 0, 0.45);
+        border: 1px solid rgba(128, 0, 0, 0.7);
+        border-radius: 999px;
+        transition: all 0.25s ease;
+    }
+    .search-box:hover {
+        background-color: rgba(0, 0, 0, 0.55);
+        border-color: rgba(170, 0, 0, 0.9);
+    }
+    .search-box:focus-within {
+        background-color: rgba(0, 0, 0, 0.7);
+        border-color: #cc0000;
+        box-shadow: 0 0 0 3px rgba(204, 0, 0, 0.18),
+                    0 6px 18px rgba(0, 0, 0, 0.35);
+    }
+    .search-icon {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #999;
+        pointer-events: none;
+        transition: color 0.2s;
+    }
+    .search-box:focus-within .search-icon { color: #cc0000; }
+
+    .search-box input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: #ffffff;
+        padding: 10px 0;
+        font-size: 13px;
+        font-family: inherit;
+        letter-spacing: 0.3px;
+    }
+    .search-box input::placeholder { color: #888; }
+
+    /* ============ 下拉结果 ============ */
+    .search-results {
+        position: absolute;
+        top: calc(100% + 10px);
+        right: 0;
+        width: 360px;
+        max-height: 340px;
+        overflow-y: auto;
+        background-color: #ffffff;
+        border: 1px solid #e0e0e0;
+        border-radius: 12px;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.22);
+        display: none;
+        z-index: 1000;
+        padding: 6px;
+    }
+    .search-results.show { display: block; }
+
+    .search-results::-webkit-scrollbar { width: 6px; }
+    .search-results::-webkit-scrollbar-track { background: transparent; }
+    .search-results::-webkit-scrollbar-thumb {
+        background-color: #ccc;
+        border-radius: 3px;
+    }
+    .search-results::-webkit-scrollbar-thumb:hover { background-color: #999; }
+
+    .search-result-item {
+        padding: 10px 12px;
+        cursor: pointer;
+        font-size: 13px;
+        color: #333;
+        border-radius: 8px;
+        border-left: 3px solid transparent;
+        transition: background-color 0.15s, border-left-color 0.15s;
+    }
+    .search-result-item.active {
+        background-color: #fdf0f0;
+        border-left-color: #800000;
+    }
+    .search-result-item.group-result {
+        font-weight: 600;
+        color: #800000;
+    }
+
+    .search-results.keyboard-mode .search-result-item {
+        transition: none;
+    }
+    .search-result-item .parent-path {
+        display: block;
+        color: #999;
+        font-size: 11px;
+        margin-top: 3px;
+    }
+    .search-result-item mark {
+        background-color: #ffe082;
+        color: #800000;
+        font-weight: bold;
+        padding: 0 2px;
+        border-radius: 2px;
+    }
+    .search-no-result {
+        padding: 24px 14px;
+        text-align: center;
+        color: #999;
+        font-size: 13px;
+    }
+
+    /* ============================================================
+       ⭐ 下方两栏：flex: 1 撑满 + 内部滚动
+       ============================================================ */
+    .page-body {
+        position: relative;
+        flex: 1;
+        min-height: 0;              /* ⭐ 关键：允许 flex 子项被压缩 */
+        overflow: hidden;           /* ⭐ 关键：不让子元素撑破 */
+        max-width: 1200px;
+        width: 100%;
+        margin: 0 auto;
+        padding: 30px 20px 40px;
+        display: flex;
+        align-items: stretch;
+        gap: 20px;
+        transition: gap 0.08s linear;
+    }
+    .page-body.collapsed { gap: 0; }
+
+    /* ⭐ 目录：固定高度 = 父容器高度，超出内部滚动 */
+    .sidebar {
+        width: 280px;
+        background-color: #ffffff;
+        border: 1px solid #dcdcdc;
+        border-radius: 12px;
+        padding: 20px 15px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        flex-shrink: 0;
+        min-height: 0;
+        overflow-x: hidden;
+        overflow-y: auto;           /* ⭐ 内部滚动 */
+        transition: width 0.08s linear,
+                    padding 0.08s linear,
+                    border-width 0.08s linear,
+                    opacity 0s linear;
+    }
+    .sidebar.collapsed {
+        width: 0;
+        padding: 0;
+        border-width: 0;
+        opacity: 0;
+    }
+
+    /* ============ 目录球 ============ */
+    .toggle-btn {
+        position: absolute;
+        top: 14px;
+        left: 4px;
+        z-index: 10;
+    }
+    .toggle-btn .arrow-icon {
+        transform: rotate(180deg);
+    }
+    .page-body.collapsed .toggle-btn .arrow-icon {
+        transform: rotate(0deg);
+    }
+
+    .sidebar h3 {
+        margin-bottom: 15px;
+        padding: 0 0 10px 44px;
+        border-bottom: 1px solid #eee;
+        font-size: 16px;
+        color: #333;
+        white-space: nowrap;
+        line-height: 32px;
+    }
+
+    /* ============ 树形目录 ============ */
+    .toc-tree { list-style: none; font-size: 14px; }
+    .toc-group { margin-bottom: 5px; }
+
+    .toc-parent {
+        position: relative;
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 10px 12px; color: #333; font-weight: bold;
+        cursor: pointer; border-radius: 6px; user-select: none;
+        transition: background-color 0.2s, color 0.2s;
+        white-space: nowrap;
+    }
+    .toc-parent:hover:not(.active):not(.previous) {
+        background-color: #f0f0f0;
+    }
+    .toc-parent::before {
+        content: "▶"; display: inline-block; font-size: 9px;
+        color: #800000; margin-right: 8px;
+        transition: transform 0.12s ease-out, color 0.2s;
+    }
+    .toc-group.open > .toc-parent::before { transform: rotate(90deg); }
+    .toc-parent .parent-text { flex: 1; }
+
+    .toc-parent.active {
+        background-color: #800000;
+        color: #ffffff;
+    }
+    .toc-parent.active::before { color: #ffcccc; }
+
+    .toc-parent.previous {
+        background-color: transparent;
+        color: #800000;
+        outline: 2px dashed #c47a7a;
+        outline-offset: -2px;
+    }
+    .toc-parent.previous::before { color: #cc8888; }
+
+    .toc-children {
+        list-style: none; max-height: 0; overflow: hidden;
+        transition: max-height 0.2s ease-out;
+        padding-left: 15px;
+    }
+    .toc-group.open > .toc-children { max-height: 1000px; }
+
+    .toc-child {
+        position: relative;
+        display: block; padding: 8px 12px; margin: 2px 0;
+        color: #555; text-decoration: none; border-radius: 6px;
+        font-size: 13px;
+        transition: background-color 0.2s, color 0.2s;
+        white-space: nowrap;
+    }
+    .toc-child::before {
+        content: "·"; color: #999; margin-right: 8px; font-weight: bold;
+        transition: color 0.2s;
+    }
+    .toc-child:hover:not(.active):not(.previous) {
+        background-color: #f5f5f5;
+        color: #000;
+    }
+
+    .toc-child.active {
+        background-color: #800000;
+        color: #ffffff;
+        font-weight: bold;
+    }
+    .toc-child.active::before { color: #ffcccc; }
+
+    .toc-child.previous {
+        background-color: transparent;
+        color: #800000;
+        outline: 2px dashed #c47a7a;
+        outline-offset: -2px;
+    }
+    .toc-child.previous::before { color: #cc8888; }
+
+    /* ============ 闪烁提示动画 ============ */
+    @keyframes flash-pulse {
+        0%   { opacity: 0.75; }
+        100% { opacity: 0; }
+    }
+    .toc-parent.flash-highlight::after,
+    .toc-child.flash-highlight::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-color: #ffd54f;
+        border-radius: 6px;
+        pointer-events: none;
+        animation: flash-pulse 0.75s ease-out;
+        z-index: -1;
+    }
+
+    /* ============================================================
+       ⭐ 右侧内容框：固定高度，内部滚动
+       ============================================================ */
+    .main-content {
+        flex: 1;
+        min-height: 0;
+        background-color: #ffffff;
+        border: 1px solid #dcdcdc;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        overflow: hidden;           /* ⭐ 让 iframe 撑满框体 */
+        display: flex;
+        flex-direction: column;
+    }
+    .main-content iframe {
+        flex: 1;
+        min-height: 0;
+        width: 100%;
+        border: none;
+        background-color: #ffffff;
+        /* iframe 内部内容超出时由 iframe 自己滚动 */
+    }
+</style>
+</head>
+<body>
+
+    <div class="header-wrapper" id="headerWrapper">
+        <header class="site-header">
+            <div class="top-bar">
+                <a href="#">建立账户</a> 或 <a href="#">登入</a>
+            </div>
+
+            <div class="header-main">
+                <div class="logo-area">
+                    <div class="logo-placeholder"></div> 
+                    <div class="title-group">
+                        <h1>SCP基金会</h1>
+                        <div class="slogan">控制，收容，保护</div>
+                    </div>
+                </div>
+
+                <div class="search-area">
+                    <div class="search-box">
+                        <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2.2"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <input type="text" id="searchInput" placeholder="搜索目录..." autocomplete="off">
+                    </div>
+                    <div class="search-results" id="searchResults"></div>
+                </div>
+            </div>
+
+            <nav class="main-nav">
+                <a href="#">SCP系列</a>
+                <a href="#">故事</a>
+                <a href="#">图书馆</a>
+                <a href="#">SCP-CN系列</a>
+                <a href="#">SCP国际</a>
+                <a href="#">背景资料</a>
+                <a href="#">指导</a>
+            </nav>
+        </header>
+
+        <button class="circle-btn header-toggle-btn" id="headerToggleBtn" title="收起顶部">
+            <svg class="arrow-icon" width="12" height="12" viewBox="0 0 10 10">
+                <path d="M 2 7 L 5 3 L 8 7 Z"
+                      fill="currentColor" stroke="currentColor"
+                      stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+            </svg>
+        </button>
+    </div>
+
+    <div class="page-body" id="pageBody">
+        
+        <aside class="sidebar" id="sidebar">
+            <h3>📖 目录</h3>
+            <ul class="toc-tree">
+                <li class="toc-group open">
+                    <div class="toc-parent"><span class="parent-text">SCP-001 系列</span></div>
+                    <ul class="toc-children">
+                        <li><a href="001-1.html" class="toc-child active" data-src="001-1.html">001 提案·初版</a></li>
+                        <li><a href="001-2.html" class="toc-child" data-src="001-2.html">001 提案·修订</a></li>
+                    </ul>
+                </li>
+                <li class="toc-group">
+                    <div class="toc-parent"><span class="parent-text">SCP-002 系列</span></div>
+                    <ul class="toc-children">
+                        <li><a href="002-1.html" class="toc-child" data-src="002-1.html">002 提案·生物</a></li>
+                        <li><a href="002-2.html" class="toc-child" data-src="002-2.html">002 提案·收容</a></li>
+                    </ul>
+                </li>
+                <li class="toc-group">
+                    <div class="toc-parent"><span class="parent-text">SCP-003 系列</span></div>
+                    <ul class="toc-children">
+                        <li><a href="003-1.html" class="toc-child" data-src="003-1.html">003 提案·符文</a></li>
+                    </ul>
+                </li>
+                <li class="toc-group">
+                    <div class="toc-parent"><span class="parent-text">红色的金鱼系列</span></div>
+                    <ul class="toc-children">
+                        <li><a href="fish-1.html" class="toc-child" data-src="fish-1.html">红色的金鱼</a></li>
+                        <li><a href="fish-2.html" class="toc-child" data-src="fish-2.html">红色的金鱼·续篇</a></li>
+                        <li><a href="fish-3.html" class="toc-child" data-src="fish-3.html">金鱼观察日志</a></li>
+                    </ul>
+                </li>
+                <li class="toc-group">
+                    <div class="toc-parent"><span class="parent-text">SCP-CN 系列</span></div>
+                    <ul class="toc-children">
+                        <li><a href="cn-001.html" class="toc-child" data-src="cn-001.html">SCP-CN-001 龙脉</a></li>
+                        <li><a href="cn-002.html" class="toc-child" data-src="cn-002.html">SCP-CN-002 山海经</a></li>
+                        <li><a href="cn-003.html" class="toc-child" data-src="cn-003.html">SCP-CN-003 红色的灯笼</a></li>
+                    </ul>
+                </li>
+                <li class="toc-group">
+                    <div class="toc-parent"><span class="parent-text">故事集</span></div>
+                    <ul class="toc-children">
+                        <li><a href="story-1.html" class="toc-child" data-src="story-1.html">事故报告 001</a></li>
+                        <li><a href="story-2.html" class="toc-child" data-src="story-2.html">基金会日记</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </aside>
+
+        <button class="circle-btn toggle-btn" id="toggleBtn" title="收起/展开目录">
+            <svg class="arrow-icon" width="12" height="12" viewBox="0 0 10 10">
+                <path d="M 2 7 L 5 3 L 8 7 Z"
+                      fill="currentColor" stroke="currentColor"
+                      stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+            </svg>
+        </button>
+
+        <main class="main-content">
+            <iframe id="contentFrame" src="about:blank" title="内容区"></iframe>
+        </main>
+        
+    </div>
+
+    <script>
+        const pageBody         = document.getElementById('pageBody');
+        const toggleBtn        = document.getElementById('toggleBtn');
+        const sidebar          = document.getElementById('sidebar');
+        const contentFrame     = document.getElementById('contentFrame');
+        const searchInput      = document.getElementById('searchInput');
+        const searchResults    = document.getElementById('searchResults');
+        const headerWrapper    = document.getElementById('headerWrapper');
+        const headerToggleBtn  = document.getElementById('headerToggleBtn');
+        const mainContent      = document.querySelector('.main-content');
+        const siteHeader       = document.querySelector('.site-header');
+
+        let currentResults = [];
+        let activeIndex    = -1;
+        let keyboardMode   = false;
+
+        let currentSelected  = document.querySelector('.toc-child.active, .toc-parent.active');
+        let previousSelected = null;
+
+        function setSelection(element) {
+            if (element === currentSelected) return;
+            if (previousSelected) {
+                previousSelected.classList.remove('previous');
+                previousSelected = null;
+            }
+            if (currentSelected) {
+                currentSelected.classList.remove('active');
+                currentSelected.classList.add('previous');
+                previousSelected = currentSelected;
+            }
+            element.classList.add('active');
+            currentSelected = element;
+        }
+
+        // ============================================================
+        // ⭐ JS 精确对齐顶部按钮到 main-content 右上角
+        // ============================================================
+        function updateHeaderBtnPosition() {
+            if (!headerWrapper.classList.contains('collapsed')) {
+                headerToggleBtn.style.top = '';
+                headerToggleBtn.style.right = '';
+                return;
+            }
+            const mc = mainContent.getBoundingClientRect();
+            const hw = headerWrapper.getBoundingClientRect();
+            const top = (mc.top - hw.top) - 16;
+            const right = (hw.right - mc.right) - 16;
+            headerToggleBtn.style.top = top + 'px';
+            headerToggleBtn.style.right = right + 'px';
+        }
+
+        headerToggleBtn.addEventListener('click', function() {
+            headerWrapper.classList.toggle('collapsed');
+            const isCollapsed = headerWrapper.classList.contains('collapsed');
+            headerToggleBtn.title = isCollapsed ? '展开顶部' : '收起顶部';
+            if (isCollapsed) exitSearch();
+            if (isCollapsed) {
+                setTimeout(updateHeaderBtnPosition, 320);
+            } else {
+                updateHeaderBtnPosition();
+            }
+        });
+
+        siteHeader.addEventListener('transitionend', function(e) {
+            if (e.propertyName === 'max-height') {
+                updateHeaderBtnPosition();
+            }
+        });
+
+        window.addEventListener('resize', updateHeaderBtnPosition);
+        updateHeaderBtnPosition();
+
+        // ---------- 目录收起/展开 ----------
+        toggleBtn.addEventListener('click', function() {
+            sidebar.classList.toggle('collapsed');
+            pageBody.classList.toggle('collapsed');
+            setTimeout(updateHeaderBtnPosition, 100);
+        });
+
+        // ---------- 闪烁提示 + 智能定位 ----------
+        function flashElement(el) {
+            el.classList.remove('flash-highlight');
+            void el.offsetWidth;
+            el.classList.add('flash-highlight');
+            setTimeout(() => el.classList.remove('flash-highlight'), 800);
+        }
+
+        function ensureVisible(el, delay = 60) {
+            setTimeout(() => {
+                const sbRect = sidebar.getBoundingClientRect();
+                const elRect = el.getBoundingClientRect();
+                const needScroll =
+                    elRect.top    < sbRect.top    + 30 ||
+                    elRect.bottom > sbRect.bottom - 30;
+                if (needScroll) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                flashElement(el);
+            }, delay);
+        }
+
+        document.querySelectorAll('.toc-parent').forEach(parent => {
+            parent.addEventListener('click', function() {
+                this.parentElement.classList.toggle('open');
+                setSelection(this);
+            });
+        });
+
+        document.querySelectorAll('.toc-child').forEach(child => {
+            child.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                openEntry(this);
+            });
+        });
+
+        function openEntry(childElement) {
+            const group = childElement.closest('.toc-group');
+            const wasClosed = group && !group.classList.contains('open');
+            if (group) group.classList.add('open');
+
+            const src = childElement.getAttribute('data-src');
+            if (src) contentFrame.src = src;
+
+            setSelection(childElement);
+
+            let delay = wasClosed ? 250 : 60;
+            if (sidebar.classList.contains('collapsed')) {
+                sidebar.classList.remove('collapsed');
+                pageBody.classList.remove('collapsed');
+                delay = 200;
+            }
+            ensureVisible(childElement, delay);
+        }
+
+        function openGroup(groupElement) {
+            const wasClosed = !groupElement.classList.contains('open');
+            groupElement.classList.add('open');
+            const parentTitle = groupElement.querySelector('.toc-parent');
+            if (parentTitle) setSelection(parentTitle);
+
+            let delay = wasClosed ? 250 : 60;
+            if (sidebar.classList.contains('collapsed')) {
+                sidebar.classList.remove('collapsed');
+                pageBody.classList.remove('collapsed');
+                delay = 200;
+            }
+            if (parentTitle) ensureVisible(parentTitle, delay);
+        }
+
+        function openResult(item) {
+            if (item.type === 'group') openGroup(item.element);
+            else openEntry(item.element);
+            exitSearch();
+        }
+
+        function exitSearch() {
+            searchResults.classList.remove('show');
+            searchInput.blur();
+        }
+
+        function collectAllEntries() {
+            const list = [];
+            document.querySelectorAll('.toc-group').forEach(group => {
+                list.push({
+                    type: 'group',
+                    text: group.querySelector('.parent-text').textContent.trim(),
+                    parentName: '',
+                    element: group,
+                });
+            });
+            document.querySelectorAll('.toc-child').forEach(child => {
+                const group = child.closest('.toc-group');
+                list.push({
+                    type: 'child',
+                    text: child.textContent.trim(),
+                    parentName: group ? group.querySelector('.parent-text').textContent.trim() : '',
+                    element: child,
+                });
+            });
+            return list;
+        }
+
+        function doSearch(query) {
+            const q = query.trim();
+            searchResults.innerHTML = '';
+            currentResults = [];
+            activeIndex = -1;
+
+            if (!q) { searchResults.classList.remove('show'); return; }
+
+            const n = q.toLowerCase();
+            const matches = collectAllEntries().filter(i => i.text.toLowerCase().includes(n));
+
+            if (matches.length === 0) {
+                searchResults.innerHTML = '<div class="search-no-result">未找到匹配的目录</div>';
+            } else {
+                matches.forEach((item, i) => {
+                    const div = document.createElement('div');
+                    div.className = 'search-result-item';
+                    div.dataset.index = i;
+
+                    if (item.type === 'group') {
+                        div.classList.add('group-result');
+                        div.innerHTML = `<div>📂 ${highlight(item.text, q)}</div>`;
+                    } else {
+                        div.innerHTML = `
+                            <div>${highlight(item.text, q)}</div>
+                            <span class="parent-path">📁 ${item.parentName}</span>
+                        `;
+                    }
+                    div.addEventListener('click', () => openResult(item));
+                    searchResults.appendChild(div);
+                    currentResults.push({ element: div, entry: item });
+                });
+                setActiveIndex(0, false);
+            }
+            searchResults.classList.add('show');
+        }
+
+        function setActiveIndex(index, scroll = true) {
+            if (currentResults.length === 0) return;
+            if (index < 0) index = currentResults.length - 1;
+            if (index >= currentResults.length) index = 0;
+            currentResults.forEach(r => r.element.classList.remove('active'));
+            const target = currentResults[index].element;
+            target.classList.add('active');
+            activeIndex = index;
+            if (scroll) {
+                void target.offsetHeight;
+                target.scrollIntoView({ block: 'nearest' });
+            }
+        }
+
+        function highlight(text, query) {
+            const idx = text.toLowerCase().indexOf(query.toLowerCase());
+            if (idx === -1) return text;
+            return text.slice(0, idx)
+                 + '<mark>' + text.slice(idx, idx + query.length) + '</mark>'
+                 + text.slice(idx + query.length);
+        }
+
+        searchInput.addEventListener('input', () => {
+            keyboardMode = false;
+            searchResults.classList.remove('keyboard-mode');
+            doSearch(searchInput.value);
+        });
+
+        searchInput.addEventListener('focus', () => {
+            if (searchInput.value.trim()) doSearch(searchInput.value);
+        });
+
+        searchResults.addEventListener('mousemove', (e) => {
+            if (keyboardMode) {
+                keyboardMode = false;
+                searchResults.classList.remove('keyboard-mode');
+            }
+            const itemEl = e.target.closest('.search-result-item');
+            if (!itemEl) return;
+            const idx = parseInt(itemEl.dataset.index, 10);
+            if (idx !== activeIndex) setActiveIndex(idx, false);
+        });
+
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                keyboardMode = true;
+                searchResults.classList.add('keyboard-mode');
+                e.preventDefault();
+
+                if (!searchResults.classList.contains('show')) {
+                    doSearch(searchInput.value);
+                    keyboardMode = true;
+                    searchResults.classList.add('keyboard-mode');
+                } else if (currentResults.length > 0) {
+                    setActiveIndex(activeIndex + (e.key === 'ArrowDown' ? 1 : -1));
+                }
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (currentResults.length === 0 && searchInput.value.trim()) {
+                    doSearch(searchInput.value);
+                }
+                if (currentResults.length > 0) {
+                    const target = activeIndex >= 0 ? activeIndex : 0;
+                    openResult(currentResults[target].entry);
+                }
+            } else if (e.key === 'Escape') {
+                exitSearch();
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.search-area')) exitSearch();
+        });
+    </script>
+
+</body>
+</html>

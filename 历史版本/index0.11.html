@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>SCP-001</title>
+    
+    <!-- 把 CSS 写在这里 -->
+    <style>
+        /* 给整个网页加个浅灰色背景，这样白色的圆角盒子会更明显（类似你截图的视觉效果） */
+        body {
+            background-color: #f4f4f4; 
+            padding: 40px 20px; /* 让盒子跟屏幕边缘留点距离 */
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            margin: 0;
+        }
+
+        /* 1. 外层容器：圆弧的长方形 */
+        .rounded-box {
+            width: 800px;              /* 盒子宽度，你可以按需修改 */
+            max-width: 100%;           /* 防止在手机屏幕上溢出 */
+            margin: 0 auto;            /* ⭐核心：让盒子在页面水平居中 */
+            background-color: #ffffff; /* 背景色：白色 */
+            border: 1px solid #dcdcdc; /* 边框：1像素浅灰色实线 */
+            border-radius: 12px;       /* ⭐核心：圆角半径，数值越大越圆 */
+            padding: 30px 40px;        /* 内边距：文字与边框的距离 */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); /* 淡淡的阴影让盒子有立体感 */
+            box-sizing: border-box;    /* 确保 padding 不会撑大盒子总宽度 */
+        }
+
+        /* 针对你页面里原有内容的微调 */
+        .rounded-box h1 {
+            margin-top: 0;
+            font-size: 24px;
+            border-bottom: 2px solid #cc0000; /* 加个红色的下划线，增加一点 SCP 的感觉 */
+            padding-bottom: 10px;
+            color: #222;
+        }
+        
+        .rounded-box p {
+            line-height: 1.8;
+            font-size: 15px;
+            color: #333;
+        }
+
+        /* 链接样式 */
+        .rounded-box a {
+            color: #cc0000;
+            text-decoration: none;
+        }
+        .rounded-box a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ⭐ 用这层 div 把原来的内容全部包起来 -->
+    <div class="rounded-box">
+        
+        <h1>SCP-001</h1>
+        <p>项目等级：Euclid</p>
+        <p>特殊收容措施：这里写收容措施。</p>
+        <p>描述：这里写描述。</p>
+
+        <p><a href="辰/001.html">001</a></p>
+        <p><a href="index.html">返回首页</a></p>
+
+    </div>
+    <!-- 包裹结束 -->
+
+</body>
+</html>

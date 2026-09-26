@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>SCP基金会</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: "Microsoft YaHei", Arial, sans-serif;
+        background-color: #f4f4f4;
+    }
+
+    /* ============ 顶部页头（保持不变） ============ */
+    .site-header {
+        background: linear-gradient(to bottom, #1a0000 0%, #4a0000 60%, #2a0000 100%);
+        color: #ffffff;
+        border-bottom: 2px solid #000;
+    }
+    .top-bar {
+        display: flex; justify-content: flex-end;
+        padding: 8px 40px; font-size: 12px;
+        background-color: rgba(0, 0, 0, 0.4);
+    }
+    .top-bar a { color: #cccccc; text-decoration: none; margin-left: 5px; }
+    .top-bar a:hover { color: #ffffff; text-decoration: underline; }
+    .header-main {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 30px 40px; max-width: 1200px; margin: 0 auto;
+    }
+    .logo-area { display: flex; align-items: center; gap: 20px; }
+    .logo-placeholder {
+        width: 80px; height: 80px; background-color: #fff;
+        border-radius: 50%; border: 3px solid #000;
+    }
+    .title-group { display: flex; flex-direction: column; }
+    .title-group h1 { font-size: 32px; letter-spacing: 2px; margin-bottom: 5px; }
+    .title-group .slogan { font-size: 14px; color: #cccccc; letter-spacing: 1px; }
+    .search-area { display: flex; gap: 5px; }
+    .search-area input {
+        background-color: rgba(0, 0, 0, 0.5); border: 1px solid #800000;
+        color: #ffffff; padding: 6px 10px; outline: none; font-size: 13px; width: 180px;
+    }
+    .search-area button {
+        background-color: #800000; color: #ffffff; border: 1px solid #800000;
+        padding: 6px 15px; cursor: pointer; font-size: 13px;
+    }
+    .search-area button:hover { background-color: #a00000; }
+    .main-nav {
+        background-color: #2b2b2b; display: flex; justify-content: flex-end;
+        padding: 0 40px; max-width: 1200px; margin: 0 auto;
+    }
+    .main-nav a {
+        color: #dddddd; text-decoration: none; padding: 12px 20px;
+        font-size: 14px; display: block;
+    }
+    .main-nav a:hover { background-color: #800000; color: #ffffff; }
+
+    /* ============ 下方两栏布局 ============ */
+    .page-body {
+        position: relative;
+        padding: 40px 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        align-items: flex-start;
+        gap: 20px;
+        transition: gap 0.3s ease;
+    }
+    .page-body.collapsed { gap: 0; }
+
+    /* ---- 左侧边栏 ---- */
+    .sidebar {
+        width: 250px;
+        background-color: #ffffff;
+        border: 1px solid #dcdcdc;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        flex-shrink: 0;
+        overflow: hidden;
+    }
+    .sidebar.collapsed {
+        width: 0; padding: 0; border-width: 0; opacity: 0;
+    }
+
+    /* ---- 圆形收起按钮 ---- */
+    .toggle-btn {
+        position: absolute;
+        top: 60px;
+        left: calc(250px - 18px);
+        width: 36px; height: 36px;
+        background-color: #800000;
+        color: #ffffff;
+        border: 2px solid #ffffff;
+        border-radius: 50%;
+        cursor: pointer;
+        z-index: 10;
+        font-size: 14px;
+        display: flex; justify-content: center; align-items: center;
+        padding: 0;
+        transition: left 0.3s ease, background 0.2s, transform 0.2s;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+    .toggle-btn:hover { background-color: #cc0000; transform: scale(1.1); }
+    .toggle-btn:active { transform: scale(0.95); }
+    .page-body.collapsed .toggle-btn { left: 2px; }
+
+    /* ---- 目录 ---- */
+    .sidebar h3 {
+        margin-bottom: 15px; padding-bottom: 10px;
+        border-bottom: 1px solid #eee;
+        font-size: 16px; color: #333; white-space: nowrap;
+    }
+    .toc-list { list-style: none; }
+    .toc-list li { margin-bottom: 10px; }
+    .toc-list a {
+        display: block;
+        color: #555; text-decoration: none;
+        padding: 8px 10px; border-radius: 6px;
+        font-size: 14px; transition: all 0.2s;
+        white-space: nowrap;
+    }
+    .toc-list a:hover { background-color: #f0f0f0; color: #000; }
+    .toc-list a.active {
+        background-color: #800000; color: #ffffff; font-weight: bold;
+    }
+
+    /* ============================================================
+       ⭐ 右侧内容区：改成 iframe 容器
+       ============================================================ */
+    .main-content {
+        flex: 1;
+        background-color: #ffffff;
+        border: 1px solid #dcdcdc;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        overflow: hidden;   /* 让 iframe 的圆角跟容器一致 */
+        min-height: 500px;
+        transition: all 0.3s ease;
+    }
+    .main-content iframe {
+        display: block;
+        width: 100%;
+        height: 100%;
+        min-height: 500px;   /* ⭐ 高度不够时会出现滚动条，也可以改成 auto 用 JS 计算 */
+        border: none;
+        background-color: #ffffff;
+    }
+</style>
+</head>
+<body>
+
+    <!-- 顶部页头 -->
+    <header class="site-header">
+        <div class="top-bar">
+            <a href="#">建立账户</a> 或 <a href="#">登入</a>
+        </div>
+        <div class="header-main">
+            <div class="logo-area">
+                <div class="logo-placeholder"></div> 
+                <div class="title-group">
+                    <h1>SCP基金会</h1>
+                    <div class="slogan">控制，收容，保护</div>
+                </div>
+            </div>
+            <div class="search-area">
+                <input type="text" placeholder="搜索网站">
+                <button>搜索</button>
+            </div>
+        </div>
+        <nav class="main-nav">
+            <a href="#">SCP系列</a>
+            <a href="#">故事</a>
+            <a href="#">图书馆</a>
+            <a href="#">SCP-CN系列</a>
+            <a href="#">SCP国际</a>
+            <a href="#">背景资料</a>
+            <a href="#">指导</a>
+        </nav>
+    </header>
+
+    <!-- 主体两栏 -->
+    <div class="page-body" id="pageBody">
+        
+        <!-- 左侧目录 -->
+        <aside class="sidebar" id="sidebar">
+            <h3>📖 目录</h3>
+            <ul class="toc-list">
+                <!-- ⭐ data-src 指向要加载的 html 文件 -->
+                <li><a href="001.html" class="toc-link active" data-src="001.html">SCP-001 提案</a></li>
+                <li><a href="002.html" class="toc-link" data-src="002.html">SCP-002 提案</a></li>
+                <li><a href="003.html" class="toc-link" data-src="003.html">SCP-003 提案</a></li>
+            </ul>
+        </aside>
+
+        <!-- 圆形收起按钮 -->
+        <button class="toggle-btn" id="toggleBtn" title="收起/展开目录">◀</button>
+
+        <!-- ⭐ 右侧：用 iframe 加载外部 html -->
+        <main class="main-content">
+            <iframe id="contentFrame" src="001.html" title="内容区"></iframe>
+        </main>
+        
+    </div>
+
+    <script>
+        const pageBody = document.getElementById('pageBody');
+        const toggleBtn = document.getElementById('toggleBtn');
+        const sidebar = document.getElementById('sidebar');
+        const tocLinks = document.querySelectorAll('.toc-link');
+        const contentFrame = document.getElementById('contentFrame');
+
+        // 收起/展开侧边栏
+        toggleBtn.addEventListener('click', function() {
+            sidebar.classList.toggle('collapsed');
+            pageBody.classList.toggle('collapsed');
+            toggleBtn.textContent = sidebar.classList.contains('collapsed') ? '▶' : '◀';
+        });
+
+        // ⭐ 点击目录：切换 iframe 的 src
+        tocLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                tocLinks.forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+
+                // 关键：把 iframe 的 src 换成目标文件
+                const targetSrc = this.getAttribute('data-src');
+                contentFrame.src = targetSrc;
+
+                // 如果想让浏览器地址栏也同步变化，可以让链接默认为超链接而不阻止默认行为
+                // 但这里是纯前端切换，所以阻止了默认跳转
+            });
+        });
+    </script>
+
+</body>
+</html>

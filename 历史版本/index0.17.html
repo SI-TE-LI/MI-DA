@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>SCP基金会</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: "Microsoft YaHei", Arial, sans-serif;
+        background-color: #f4f4f4;
+    }
+
+    /* ============================================================
+       ⭐ 顶部页头：整块做成圆角卡片 + 外边距 + 阴影
+       ============================================================ */
+    .site-header {
+        background: linear-gradient(to bottom, #1a0000 0%, #4a0000 60%, #2a0000 100%);
+        color: #ffffff;
+        /* ⭐ 圆角 + 外边距，让页头悬浮在背景上 */
+        border-radius: 16px;
+        margin: 20px auto 0;         /* 上留 20px，水平居中 */
+        max-width: 1200px;
+        overflow: hidden;             /* ⭐ 关键：让内部圆角不被子元素覆盖 */
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15); /* 卡片阴影 */
+    }
+
+    /* ---- 最顶部用户栏 ---- */
+    .top-bar {
+        display: flex; justify-content: flex-end;
+        padding: 10px 40px; font-size: 12px;
+        /* ⭐ 半透明黑色，比之前更透一些 */
+        background-color: rgba(0, 0, 0, 0.35);
+        /* 因为外层已有 overflow:hidden，这里不用单独加圆角 */
+    }
+    .top-bar a { color: #cccccc; text-decoration: none; margin-left: 5px; }
+    .top-bar a:hover { color: #ffffff; text-decoration: underline; }
+
+    /* ---- 主视觉区 ---- */
+    .header-main {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 30px 40px;
+        /* 不用 max-width 限制，让内部的宽度跟随 .site-header */
+    }
+    .logo-area { display: flex; align-items: center; gap: 20px; }
+    .logo-placeholder {
+        width: 80px; height: 80px; background-color: #fff;
+        border-radius: 50%; border: 3px solid #000;
+    }
+    .title-group { display: flex; flex-direction: column; }
+    .title-group h1 { font-size: 32px; letter-spacing: 2px; margin-bottom: 5px; }
+    .title-group .slogan { font-size: 14px; color: #cccccc; letter-spacing: 1px; }
+
+    .search-area { display: flex; gap: 5px; }
+    .search-area input {
+        background-color: rgba(0, 0, 0, 0.5); border: 1px solid #800000;
+        color: #ffffff; padding: 6px 10px; outline: none; font-size: 13px; width: 180px;
+        /* ⭐ 搜索框也加圆角，更协调 */
+        border-radius: 6px;
+    }
+    .search-area button {
+        background-color: #800000; color: #ffffff; border: 1px solid #800000;
+        padding: 6px 15px; cursor: pointer; font-size: 13px;
+        /* ⭐ 按钮加圆角 */
+        border-radius: 6px;
+        transition: background 0.2s;
+    }
+    .search-area button:hover { background-color: #a00000; }
+
+    /* ============================================================
+       ⭐ 黑色导航条：改成半透明 + 与页头底部圆角贴合
+       ============================================================ */
+    .main-nav {
+        /* 原来是 #2b2b2b 纯色，现在用 rgba 半透明 */
+        background-color: rgba(20, 20, 20, 0.55);
+        /* 加一层模糊，让半透明更有质感 */
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        display: flex; justify-content: flex-end;
+        padding: 0 40px;
+        /* ⭐ 底部两角跟随外层页头的圆角
+           因为在 .site-header 上加过 overflow:hidden，
+           这里其实不需要单独写圆角，会被自动裁切，
+           但写一份更保险 */
+        border-radius: 0 0 16px 16px;
+    }
+    .main-nav a {
+        color: #e0e0e0; text-decoration: none; padding: 12px 20px;
+        font-size: 14px; display: block;
+        transition: background 0.2s, color 0.2s;
+    }
+    .main-nav a:hover { background-color: rgba(128, 0, 0, 0.85); color: #ffffff; }
+
+    /* ============================================================
+       下方主体（保持不变）
+       ============================================================ */
+    .page-body {
+        position: relative;
+        padding: 40px 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        align-items: flex-start;
+        gap: 20px;
+        transition: gap 0.3s ease;
+    }
+    .page-body.collapsed { gap: 0; }
+
+    /* ---- 左侧边栏 ---- */
+    .sidebar {
+        width: 260px;
+        background-color: #ffffff;
+        border: 1px solid #dcdcdc;
+        border-radius: 12px;
+        padding: 20px 15px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        flex-shrink: 0;
+        overflow: hidden;
+    }
+    .sidebar.collapsed {
+        width: 0; padding: 0; border-width: 0; opacity: 0;
+    }
+
+    /* ---- 圆形收起按钮 ---- */
+    .toggle-btn {
+        position: absolute;
+        top: 60px;
+        left: calc(260px - 18px);
+        width: 36px; height: 36px;
+        background-color: #800000;
+        color: #ffffff;
+        border: 2px solid #ffffff;
+        border-radius: 50%;
+        cursor: pointer;
+        z-index: 10;
+        font-size: 14px;
+        display: flex; justify-content: center; align-items: center;
+        padding: 0;
+        transition: left 0.3s ease, background 0.2s, transform 0.2s;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+    .toggle-btn:hover { background-color: #cc0000; transform: scale(1.1); }
+    .toggle-btn:active { transform: scale(0.95); }
+    .page-body.collapsed .toggle-btn { left: 2px; }
+
+    /* ---- 目录标题 ---- */
+    .sidebar h3 {
+        margin-bottom: 15px; padding-bottom: 10px;
+        border-bottom: 1px solid #eee;
+        font-size: 16px; color: #333; white-space: nowrap;
+    }
+
+    /* ---- 树形目录 ---- */
+    .toc-tree { list-style: none; font-size: 14px; }
+    .toc-group { margin-bottom: 5px; }
+    .toc-parent {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 10px 12px; color: #333; font-weight: bold;
+        cursor: pointer; border-radius: 6px; user-select: none;
+        transition: background 0.2s; white-space: nowrap;
+    }
+    .toc-parent:hover { background-color: #f0f0f0; }
+    .toc-parent::before {
+        content: "▶"; display: inline-block; font-size: 9px;
+        color: #800000; margin-right: 8px;
+        transition: transform 0.25s ease;
+    }
+    .toc-group.open > .toc-parent::before { transform: rotate(90deg); }
+    .toc-parent .parent-text { flex: 1; }
+    .toc-children {
+        list-style: none; max-height: 0; overflow: hidden;
+        transition: max-height 0.3s ease;
+        padding-left: 15px;
+    }
+    .toc-group.open > .toc-children { max-height: 1000px; }
+    .toc-child {
+        display: block; padding: 8px 12px; margin: 2px 0;
+        color: #555; text-decoration: none; border-radius: 6px;
+        font-size: 13px; transition: all 0.2s; white-space: nowrap;
+    }
+    .toc-child::before {
+        content: "·"; color: #999; margin-right: 8px; font-weight: bold;
+    }
+    .toc-child:hover { background-color: #f5f5f5; color: #000; }
+    .toc-child.active {
+        background-color: #800000; color: #ffffff; font-weight: bold;
+    }
+    .toc-child.active::before { color: #ffcccc; }
+
+    /* ---- 右侧 iframe ---- */
+    .main-content {
+        flex: 1;
+        background-color: #ffffff;
+        border: 1px solid #dcdcdc;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        min-height: 500px;
+        transition: all 0.3s ease;
+    }
+    .main-content iframe {
+        display: block; width: 100%; height: 100%;
+        min-height: 500px; border: none; background-color: #ffffff;
+    }
+</style>
+</head>
+<body>
+
+    <!-- 顶部页头（结构没变，样式改了） -->
+    <header class="site-header">
+        <div class="top-bar">
+            <a href="#">建立账户</a> 或 <a href="#">登入</a>
+        </div>
+
+        <div class="header-main">
+            <div class="logo-area">
+                <div class="logo-placeholder"></div> 
+                <div class="title-group">
+                    <h1>SCP基金会</h1>
+                    <div class="slogan">控制，收容，保护</div>
+                </div>
+            </div>
+            <div class="search-area">
+                <input type="text" placeholder="搜索网站">
+                <button>搜索</button>
+            </div>
+        </div>
+
+        <nav class="main-nav">
+            <a href="#">SCP系列</a>
+            <a href="#">故事</a>
+            <a href="#">图书馆</a>
+            <a href="#">SCP-CN系列</a>
+            <a href="#">SCP国际</a>
+            <a href="#">背景资料</a>
+            <a href="#">指导</a>
+        </nav>
+    </header>
+
+    <!-- 主体两栏（保持不变） -->
+    <div class="page-body" id="pageBody">
+        
+        <aside class="sidebar" id="sidebar">
+            <h3>📖 目录</h3>
+            <ul class="toc-tree">
+                <li class="toc-group open">
+                    <div class="toc-parent">
+                        <span class="parent-text">SCP-001 系列</span>
+                    </div>
+                    <ul class="toc-children">
+                        <li><a href="001-1.html" class="toc-child active" data-src="001-1.html">001 提案·初版</a></li>
+                        <li><a href="001-2.html" class="toc-child" data-src="001-2.html">001 提案·修订</a></li>
+                    </ul>
+                </li>
+                <li class="toc-group">
+                    <div class="toc-parent">
+                        <span class="parent-text">SCP-002 系列</span>
+                    </div>
+                    <ul class="toc-children">
+                        <li><a href="002-1.html" class="toc-child" data-src="002-1.html">002 提案·生物</a></li>
+                        <li><a href="002-2.html" class="toc-child" data-src="002-2.html">002 提案·收容</a></li>
+                    </ul>
+                </li>
+                <li class="toc-group">
+                    <div class="toc-parent">
+                        <span class="parent-text">SCP-003 系列</span>
+                    </div>
+                    <ul class="toc-children">
+                        <li><a href="003-1.html" class="toc-child" data-src="003-1.html">003 提案·符文</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </aside>
+
+        <button class="toggle-btn" id="toggleBtn" title="收起/展开目录">◀</button>
+
+        <main class="main-content">
+            <iframe id="contentFrame" src="001-1.html" title="内容区"></iframe>
+        </main>
+        
+    </div>
+
+    <script>
+        const pageBody = document.getElementById('pageBody');
+        const toggleBtn = document.getElementById('toggleBtn');
+        const sidebar = document.getElementById('sidebar');
+        const contentFrame = document.getElementById('contentFrame');
+
+        toggleBtn.addEventListener('click', function() {
+            sidebar.classList.toggle('collapsed');
+            pageBody.classList.toggle('collapsed');
+            toggleBtn.textContent = sidebar.classList.contains('collapsed') ? '▶' : '◀';
+        });
+
+        const parents = document.querySelectorAll('.toc-parent');
+        parents.forEach(parent => {
+            parent.addEventListener('click', function() {
+                const group = this.parentElement;
+                group.classList.toggle('open');
+            });
+        });
+
+        const children = document.querySelectorAll('.toc-child');
+        children.forEach(child => {
+            child.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                children.forEach(c => c.classList.remove('active'));
+                this.classList.add('active');
+                const targetSrc = this.getAttribute('data-src');
+                contentFrame.src = targetSrc;
+            });
+        });
+    </script>
+
+</body>
+</html>
