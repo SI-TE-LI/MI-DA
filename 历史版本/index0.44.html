@@ -1133,9 +1133,14 @@
                         <label for="accountBirth">出生年月</label>
                         <input type="month" id="accountBirth" class="auth-input">
                     </div>
-                    <div class="setting-row">
+                                      <div class="setting-row">
                         <label>找回密码</label>
                         <button type="button" class="settings-btn" id="accountResetPassword" style="width:100%;">发送密码重置邮件到邮箱</button>
+                    </div>
+                    <div class="setting-row">
+                        <label>注销账号</label>
+                        <button type="button" class="settings-btn" id="accountDeleteAccount" style="width:100%; color:#c00; border-color:#f0b0b0;">永久删除我的账号</button>
+                        <div class="account-hint">删除后无法恢复，请谨慎操作</div>
                     </div>
                     <div class="account-message" id="accountMessage"></div>
                 </div>
@@ -1821,12 +1826,40 @@
             accountDone.textContent = '完成';
             accountDone.onclick = closeAccountModal;
 
-            const meta = user.user_metadata || {};
-            accountUsername.value  = meta.username || '';
             accountEmail.value     = user.email || '';
             accountCreatedAt.value = formatDateTime(user.created_at);
-            accountGender.value    = meta.gender || '';
-            accountBirth.value     = meta.birth || '';
+
+            // ⭐ 从 profiles 表读用户信息
+            const { data: profile, error } = await supabaseClient
+                .from('profiles')
+                .select('username, gender, birth, username_changed')
+                .eq('id', user.id)
+                .maybeSingle();
+
+            if (error) {
+                accountMessage.textContent = '读取用户信息失败：' + error.message;
+                accountMessage.classList.add('error');
+                return;
+            }
+
+            if (profile) {
+                accountUsername.value = profile.username || '';
+                accountGender.value   = profile.gender || '';
+                accountBirth.value    = profile.birth || '';
+
+                // ⭐ 已经改过一次用户名 → 禁用输入框
+                if (profile.username_changed) {
+                    accountUsername.disabled = true;
+                    accountUsername.title = '用户名只能修改一次，已使用过修改机会';
+                } else {
+                    accountUsername.disabled = false;
+                    accountUsername.title = '';
+                }
+            } else {
+                accountUsername.value = '';
+                accountGender.value   = '';
+                accountBirth.value    = '';
+            }
         }
 
         async function saveAccountInfo() {
@@ -1843,12 +1876,65 @@
                 accountMessage.classList.add('error');
                 return;
             }
+
             const { data: { user } } = await supabaseClient.auth.getUser();
             if (!user) return;
-            const existingMeta = user.user_metadata || {};
-            const { error } = await supabaseClient.auth.updateUser({
-                data: { ...existingMeta, username, gender, birth }
-            });
+
+            // ⭐ 读取当前 profile
+            const { data: currentProfile, error: fetchErr } = await supabaseClient
+                .from('profiles')
+                .select('username, username_changed')
+                .eq('id', user.id)
+                .maybeSingle();
+
+            if (fetchErr) {
+                accountMessage.textContent = '读取失败：' + fetchErr.message;
+                accountMessage.classList.add('error');
+                return;
+            }
+
+            const updateData = {
+                gender: gender,
+                birth: birth,
+                updated_at: new Date().toISOString()
+            };
+
+            const usernameChanged = !currentProfile || currentProfile.username !== username;
+            if (usernameChanged) {
+                // ⭐ 检查是否已用过修改机会
+                if (currentProfile && currentProfile.username_changed) {
+                    accountMessage.textContent = '你已经修改过一次用户名，无法再次修改。';
+                    accountMessage.classList.add('error');
+                    return;
+                }
+
+                // ⭐ 检查新用户名是否已被占用
+                const { data: dup, error: dupErr } = await supabaseClient
+                    .from('profiles')
+                    .select('id')
+                    .eq('username', username)
+                    .neq('id', user.id)
+                    .maybeSingle();
+                if (dupErr) {
+                    accountMessage.textContent = '检查重名失败：' + dupErr.message;
+                    accountMessage.classList.add('error');
+                    return;
+                }
+                if (dup) {
+                    accountMessage.textContent = '该用户名已被占用，请更换';
+                    accountMessage.classList.add('error');
+                    return;
+                }
+
+                updateData.username = username;
+                updateData.username_changed = true;
+            }
+
+            const { error } = await supabaseClient
+                .from('profiles')
+                .update(updateData)
+                .eq('id', user.id);
+
             if (error) {
                 accountMessage.textContent = '保存失败：' + error.message;
                 accountMessage.classList.add('error');
@@ -1856,6 +1942,8 @@
                 accountMessage.textContent = '已保存';
                 accountMessage.classList.remove('error');
                 setTimeout(() => { accountMessage.textContent = ''; }, 2000);
+                // 刷新禁用状态
+                refreshAccountModal();
                 const { data: { user: u } } = await supabaseClient.auth.getUser();
                 if (u) updateAuthUI(u);
             }
@@ -1890,7 +1978,47 @@
             }
         });
 
-        function openAccountModal() {
+               // ⭐ 注销账号
+        document.getElementById('accountDeleteAccount').addEventListener('click', async function() {
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            if (!user) {
+                accountMessage.textContent = '未登录';
+                accountMessage.classList.add('error');
+                return;
+            }
+
+            // 双重确认
+            const first = confirm('确定要注销账号吗？此操作不可恢复。');
+            if (!first) return;
+            const second = confirm('再次确认：账号及所有信息将被永久删除，确定继续？');
+            if (!second) return;
+
+            const btn = this;
+            btn.disabled = true;
+            accountMessage.textContent = '正在删除...';
+            accountMessage.classList.remove('error');
+
+            try {
+                const { error } = await supabaseClient.rpc('delete_my_account');
+                if (error) throw error;
+
+                accountMessage.textContent = '账号已删除，正在退出...';
+                accountMessage.style.color = '#c00';
+
+                // 删除成功，登出
+                await supabaseClient.auth.signOut();
+                closeAccountModal();
+                updateAuthUI(null);
+
+                alert('账号已删除，感谢你的使用。');
+            } catch (err) {
+                accountMessage.textContent = '注销失败：' + (err.message || '未知错误');
+                accountMessage.classList.add('error');
+                btn.disabled = false;
+            }
+        });
+
+               function openAccountModal() {
             refreshAccountModal();
             accountModal.classList.add('show');
             exitSearch();
@@ -2038,7 +2166,6 @@
                 authMessage.style.color = '#c00';
                 return;
             }
-
             let username = '';
             if (!isLoginMode) {
                 username = authUsername.value.trim();
@@ -2047,8 +2174,29 @@
                     authMessage.style.color = '#c00';
                     return;
                 }
+
                 if (username.length > 20) {
                     authMessage.textContent = '用户名不能超过 20 字';
+                    authMessage.style.color = '#c00';
+                    return;
+                }
+
+                // ⭐ 检查用户名是否已被占用
+                authMessage.textContent = '检查用户名...';
+                authMessage.style.color = '#666';
+                const { data: existing, error: checkErr } = await supabaseClient
+                    .from('profiles')
+                    .select('id')
+                    .eq('username', username)
+                    .maybeSingle();
+
+                if (checkErr) {
+                    authMessage.textContent = '检查用户名失败：' + checkErr.message;
+                    authMessage.style.color = '#c00';
+                    return;
+                }
+                if (existing) {
+                    authMessage.textContent = '该用户名已被占用，请更换';
                     authMessage.style.color = '#c00';
                     return;
                 }
@@ -2099,8 +2247,17 @@
                     } else {
                         authMessage.textContent = baseMsg + '（连续失败 ' + loginFailCount + ' 次，请尝试找回密码）';
                     }
-                } else {
-                    authMessage.textContent = err.message || '操作失败，请重试';
+                             } else {
+                    const msg = err.message || '操作失败，请重试';
+                    if (/already registered|already exists/i.test(msg)) {
+                        authMessage.textContent = '该邮箱已注册，请直接登录或使用其他邮箱';
+                    } else if (/invalid.*email/i.test(msg)) {
+                        authMessage.textContent = '邮箱格式不正确';
+                    } else if (/password/i.test(msg)) {
+                        authMessage.textContent = '密码不符合要求';
+                    } else {
+                        authMessage.textContent = msg;
+                    }
                 }
                 authMessage.style.color = '#c00';
             } finally {
@@ -2108,10 +2265,18 @@
             }
         });
 
-        function updateAuthUI(user) {
+          async function updateAuthUI(user) {
             if (user) {
-                const meta = user.user_metadata || {};
-                const displayName = meta.username || user.email || '已登录';
+                // ⭐ 从 profiles 表读用户名
+                let displayName = user.email || '已登录';
+                const { data: profile } = await supabaseClient
+                    .from('profiles')
+                    .select('username')
+                    .eq('id', user.id)
+                    .maybeSingle();
+                if (profile && profile.username) {
+                    displayName = profile.username;
+                }
                 signupBtn.textContent = displayName;
                 signupBtn.style.pointerEvents = 'none';
                 loginBtn.textContent = '退出';
@@ -2138,20 +2303,20 @@
 
         supabaseClient.auth.onAuthStateChange(async (event, session) => {
             if (session && session.user) {
-                updateAuthUI(session.user);
+                await updateAuthUI(session.user);
                 if (event === 'SIGNED_IN') {
                     await loadSettingsFromCloud();
                 }
             } else {
-                updateAuthUI(null);
+                await updateAuthUI(null);
                 if (accountModal.classList.contains('show')) refreshAccountModal();
             }
         });
 
-        (async function initAuth() {
+          (async function initAuth() {
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session && session.user) {
-                updateAuthUI(session.user);
+                await updateAuthUI(session.user);
                 await loadSettingsFromCloud();
             }
         })();
