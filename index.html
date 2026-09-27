@@ -1185,9 +1185,8 @@
                         </button>
                     </div>
                 </div>
-                <div id="authMessage" style="font-size:13px; margin-top:8px; min-height:20px;"></div>
-                <div class="auth-forgot" id="authForgot">
-                    <a href="#" id="authForgotLink">忘记密码？点击发送重置邮件</a>
+                              <div class="auth-forgot" id="authResendVerify">
+                    <a href="#" id="authResendVerifyLink">没收到验证邮件？点击重新发送</a>
                 </div>
             </div>
             <div class="settings-footer">
@@ -2218,37 +2217,48 @@
                     authMessage.style.color = '#2a7a2a';
                     setTimeout(closeAuthModal, 800);
                     updateAuthUI(data.user);
-                } else {
+                           } else {
                     const { data, error } = await supabaseClient.auth.signUp({
                         email, password,
                         options: { data: { username } }
                     });
                     if (error) throw error;
-                    if (data.user && data.session) {
+
+                    // ⭐ 只有邮箱已确认，才算真的登录成功
+                    if (data.user && data.user.email_confirmed_at) {
                         authMessage.textContent = '注册成功，已自动登录！';
                         authMessage.style.color = '#2a7a2a';
                         setTimeout(closeAuthModal, 800);
                         updateAuthUI(data.user);
                     } else {
-                        authMessage.textContent = '注册成功！请前往邮箱确认后登录。';
+                        authMessage.textContent = '注册成功！请前往邮箱点击确认链接后再登录。';
                         authMessage.style.color = '#2a7a2a';
+                        authResendVerify.style.display = 'block';
                     }
                 }
             } catch (err) {
+                const msg = err.message || '';
+                const isEmailNotConfirmed = /email not confirmed|not confirmed|confirm.*email/i.test(msg);
+
                 if (isLoginMode) {
-                    loginFailCount++;
-                    if (loginFailCount >= MAX_LOGIN_FAILS) {
-                        authForgot.style.display = 'block';
-                    }
-                    const remain = MAX_LOGIN_FAILS - loginFailCount;
-                    const baseMsg = err.message || '登录失败';
-                    if (remain > 0) {
-                        authMessage.textContent = baseMsg + '（还可尝试 ' + remain + ' 次）';
+                    if (isEmailNotConfirmed) {
+                        // ⭐ 邮箱未验证 → 不算密码错误，提示去邮箱验证
+                        authMessage.textContent = '邮箱尚未验证，请前往邮箱点击确认链接后再登录';
+                        authResendVerify.style.display = 'block';
                     } else {
-                        authMessage.textContent = baseMsg + '（连续失败 ' + loginFailCount + ' 次，请尝试找回密码）';
+                        loginFailCount++;
+                        if (loginFailCount >= MAX_LOGIN_FAILS) {
+                            authForgot.style.display = 'block';
+                        }
+                        const remain = MAX_LOGIN_FAILS - loginFailCount;
+                        const baseMsg = msg || '登录失败';
+                        if (remain > 0) {
+                            authMessage.textContent = baseMsg + '（还可尝试 ' + remain + ' 次）';
+                        } else {
+                            authMessage.textContent = baseMsg + '（连续失败 ' + loginFailCount + ' 次，请尝试找回密码）';
+                        }
                     }
-                             } else {
-                    const msg = err.message || '操作失败，请重试';
+                } else {
                     if (/already registered|already exists/i.test(msg)) {
                         authMessage.textContent = '该邮箱已注册，请直接登录或使用其他邮箱';
                     } else if (/invalid.*email/i.test(msg)) {
