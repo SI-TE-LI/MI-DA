@@ -1,0 +1,4 @@
+// 本文件由 convert.py 自动生成，请勿手动修改
+window.SCP_ARTICLES = window.SCP_ARTICLES || {};
+window.SCP_ARTICLES["辰/细线/细线"] = `<h1>细线</h1>
+<p>这种隐秘布置的线完全无法用肉眼观察，其极细却很坚韧，将其布置于暗处，跑过的人都将被完美的被截开，随之的才是血液的流淌，而线不会沾上任何东西。</p>`;
